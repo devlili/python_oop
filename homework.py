@@ -1,24 +1,23 @@
+from dataclasses import asdict, dataclass
+
+
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-    def __init__(self,
-                 training_type: str,
-                 duration: float,
-                 distance: float,
-                 speed: float,
-                 calories: float
-                 ) -> None:
-        self.training_type = training_type  # Имя класса тренировки
-        self.duration = duration  # Длительность тренировки в часах
-        self.distance = distance  # Дистанция в километрах
-        self.speed = speed  # Средняя скорость
-        self.calories = calories  # Количество килокалорий
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
+
+    MESSAGE = ('Тип тренировки: {training_type}; '
+               'Длительность: {duration:.3f} ч.; '
+               'Дистанция: {distance:.3f} км; '
+               'Ср. скорость: {speed:.3f} км/ч; '
+               'Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type}; '
-                f'Длительность: {self.duration:.3f} ч.; '
-                f'Дистанция: {self.distance:.3f} км; '
-                f'Ср. скорость: {self.speed:.3f} км/ч; '
-                f'Потрачено ккал: {self.calories:.3f}.')
+        return self.MESSAGE.format(**asdict(self))
 
 
 class Training:
@@ -26,7 +25,6 @@ class Training:
     LEN_STEP = 0.65
     M_IN_KM = 1000
     MIN_IN_H = 60
-    CM_IN_M = 100
 
     def __init__(self,
                  action: int,
@@ -47,7 +45,7 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        pass
+        raise NotImplementedError('Метод не определён')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -75,6 +73,7 @@ class SportsWalking(Training):
     CALORIES_WEIGHT_MULTIPLIER = 0.035
     CALORIES_SPEED_HEIGHT_MULTIPLIER = 0.029
     KMH_IN_MSEC = 0.278
+    CM_IN_M = 100
 
     def __init__(self,
                  action: int,
@@ -87,7 +86,7 @@ class SportsWalking(Training):
 
     def get_spent_calories(self) -> float:
         return ((self.CALORIES_WEIGHT_MULTIPLIER * self.weight
-                + ((self.get_mean_speed() * self.KMH_IN_MSEC)**2
+                + ((self.get_mean_speed() * self.KMH_IN_MSEC) ** 2
                  / (self.height / self.CM_IN_M))
                 * self.CALORIES_SPEED_HEIGHT_MULTIPLIER * self.weight)
                 * (self.duration * self.MIN_IN_H))
@@ -126,7 +125,11 @@ def read_package(workout_type: str, data: list) -> Training:
         'RUN': Running,
         'WLK': SportsWalking
     }
-    return train[workout_type](*data)
+    try:
+        return train[workout_type](*data)
+    except KeyError:
+        print('Неверно указан код тренировки')
+        raise
 
 
 def main(training: Training) -> None:
