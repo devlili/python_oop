@@ -125,11 +125,9 @@ def read_package(workout_type: str, data: list) -> Training:
         'RUN': Running,
         'WLK': SportsWalking
     }
-    try:
-        return train[workout_type](*data)
-    except KeyError:
-        print('Неверно указан код тренировки')
-        raise
+    if workout_type not in train:
+        raise KeyError("Неверно указан код тренировки")
+    return train[workout_type](*data)
 
 
 def main(training: Training) -> None:
